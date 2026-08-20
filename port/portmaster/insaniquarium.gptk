@@ -1,0 +1,52 @@
+# Insaniquarium Deluxe - gamepad mapping
+#
+# The game is entirely pointer driven: you click to drop food, collect coins,
+# shoot aliens and buy in the shop. So the gamepad acts as a mouse.
+#
+# gptokeyb emits real system-level mouse events, so the game never sees a
+# joystick at all: it gets exactly what it would on a PC.
+
+back = escape
+start = enter
+
+# A feeds / collects / shoots; B is right click (release pet, cancel).
+a = mouse_left
+b = mouse_right
+
+x = \"
+y = \"
+
+# Small fish and coins are tiny targets at 640x480; without a slow mode they
+# are hard to hit with the stick.
+l1 = mouse_slow
+r1 = mouse_slow
+
+l2 = \"
+r2 = \"
+l3 = \"
+r3 = \"
+
+up = mouse_movement_up
+down = mouse_movement_down
+left = mouse_movement_left
+right = mouse_movement_right
+
+left_analog_up = mouse_movement_up
+left_analog_down = mouse_movement_down
+left_analog_left = mouse_movement_left
+left_analog_right = mouse_movement_right
+
+right_analog_up = \"
+right_analog_down = \"
+right_analog_left = \"
+right_analog_right = \"
+
+deadzone_mode = scaled_radial
+deadzone = 6000
+deadzone_scale = 6
+deadzone_triggers = 3000
+
+# The launcher rewrites these three based on the screen resolution.
+dpad_mouse_step = 4
+mouse_scale = 6000
+mouse_delay = 16

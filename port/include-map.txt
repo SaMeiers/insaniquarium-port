@@ -1,0 +1,43 @@
+# SexyAppFramework -> PopLib : mapeo de headers
+# formato: <header viejo sin .h> <ruta nueva relativa a PopLib/>
+# 34 mapean 1:1 por nombre; los 6 marcados RENOMBRE cambiaron de identidad.
+BassMusicInterface	audio/bassmusicinterface.hpp
+Buffer	misc/buffer.hpp
+ButtonListener	widget/buttonlistener.hpp
+ButtonWidget	widget/buttonwidget.hpp
+Checkbox	widget/checkbox.hpp
+CheckboxListener	widget/checkboxlistener.hpp
+Color	graphics/color.hpp
+Common	common.hpp
+D3DInterface	graphics/sdlinterface.hpp	# RENOMBRE: D3D e interfaz de video se fusionaron en SDLInterface
+DDImage	graphics/sdlimage.hpp	# RENOMBRE: DDImage -> SDLImage
+DDInterface	graphics/sdlinterface.hpp	# RENOMBRE: DDInterface -> SDLInterface
+Debug	debug/debug.hpp
+Dialog	widget/dialog.hpp
+DialogButton	widget/dialogbutton.hpp
+EditListener	widget/editlistener.hpp
+EditWidget	widget/editwidget.hpp
+Font	graphics/font.hpp
+Graphics	graphics/graphics.hpp
+HTTPTransfer	misc/httptransfer.hpp
+HyperlinkWidget	widget/hyperlinkwidget.hpp
+ImageFont	graphics/imagefont.hpp
+KeyCodes	misc/keycodes.hpp
+ListListener	widget/listlistener.hpp
+ListWidget	widget/listwidget.hpp
+MTRand	math/mtrand.hpp
+MemoryImage	graphics/memoryimage.hpp
+Rect	math/rect.hpp
+ResourceManager	resources/resourcemanager.hpp
+SEHCatcher	debug/errorhandler.hpp	# RENOMBRE: SEHCatcher -> ErrorHandler (stub, sin los campos mCrashMessage/mSubmitHost)
+SWTri	graphics/SWTri/SWTri.hpp
+ScrollbarWidget	widget/scrollbarwidget.hpp
+SexyAppBase	appbase.hpp	# RENOMBRE: clase SexyAppBase -> AppBase
+SexyMatrix	math/matrix.hpp	# RENOMBRE: SexyTransform2D -> Transform2D, SexyMatrix3 -> Matrix3
+Slider	widget/slider.hpp
+SliderListener	widget/sliderlistener.hpp
+SoundInstance	audio/soundinstance.hpp
+SoundManager	audio/soundmanager.hpp
+Widget	widget/widget.hpp
+WidgetManager	widget/widgetmanager.hpp
+trivertex	math/trivertex.hpp

@@ -1,0 +1,16 @@
+# Shell scripts and the PortMaster files must keep LF wherever they are checked
+# out. A launcher with CRLF fails on the device with
+# "bad interpreter: /bin/bash^M", and a .gptk with CRLF fails worse: gptokeyb
+# reads "mouse_left\r" as a key name that does not exist, ignores it silently,
+# and the button simply does nothing.
+*.sh        text eol=lf
+*.gptk      text eol=lf
+*.conf      text eol=lf
+*.patch     text eol=lf
+gradlew     text eol=lf
+
+# Windows-only
+*.bat       text eol=crlf
+
+*.png       binary
+*.jar       binary
