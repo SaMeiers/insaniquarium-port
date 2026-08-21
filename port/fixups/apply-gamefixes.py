@@ -65,7 +65,37 @@ def main():
     ok &= sub("Fish.cpp",
               b"mFoodAte = mFoodAte + 2 + mApp->mGameMode != GAMEMODE_VIRTUAL_TANK;",
               b"mFoodAte = mFoodAte + 2 + (mApp->mGameMode != GAMEMODE_VIRTUAL_TANK);",
-              "Fish: precedencia rompia la acumulacion de comida (no crecian)")
+              "Fish: precedence broke food accumulation, so fish never grew")
+
+    # --- 2. Cheat code scan runs off the end of the array --------------------
+    #
+    # Symptom: on a 64-bit build, pressing a key during a game freezes it. Which
+    # key depends on the device, and it never happens in the menus.
+    #
+    # Cause: the element count is computed by dividing by a hardcoded pointer
+    # size.
+    #
+    #     CheatCode* mCheatCodes[8];
+    #     for (int i = 0; i < sizeof(mCheatCodes) / 4; i++)
+    #
+    # A pointer was 4 bytes when this was written, so sizeof was 32 and the loop
+    # ran 8 times. A 64-bit pointer makes sizeof 64, so it runs 16 times and
+    # reads eight entries past the end of the array, calling a method on
+    # whatever happens to follow it in the object. That garbage can report a
+    # cheat as activated, and DoCheatCode then runs with an index no case
+    # handles.
+    #
+    # It only bites during a game because Board is what owns these; there is no
+    # Board in the menus, which is why the menus are unaffected.
+    ok &= sub("Board.cpp",
+              b"for (int i = 0; i < sizeof(mCheatCodes) / 4; i++)",
+              b"for (int i = 0; i < sizeof(mCheatCodes) / sizeof(mCheatCodes[0]); i++)",
+              "Board::KeyChar: cheat code loop ran past the end of the array")
+
+    ok &= sub("Board.cpp",
+              b"for (int i = 0; i < (sizeof(mCheatCodes) / 4); i++)",
+              b"for (int i = 0; i < (sizeof(mCheatCodes) / sizeof(mCheatCodes[0])); i++)",
+              "Board::KeyDown: cheat code loop ran past the end of the array")
 
     return 0 if ok else 1
 
