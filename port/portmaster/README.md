@@ -55,8 +55,8 @@ them and copying the folder to another card keeps them.
 
 ## Known issues
 
-- On the R36S, pressing the hardware volume buttons during a game can briefly
-  freeze the picture. Reports from other devices are welcome.
+- The picture can pause briefly every few minutes. The display driver's pageflip
+  event arrives late; it happens below SDL and does not affect play.
 - Loading screens run at a reduced frame rate. That is the original engine's own
   behaviour: it deliberately gives two thirds of the CPU to the loading thread.
 
