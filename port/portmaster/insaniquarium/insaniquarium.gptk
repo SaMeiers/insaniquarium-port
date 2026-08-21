@@ -6,14 +6,8 @@
 # gptokeyb emits real system-level mouse events, so the game never sees a
 # joystick at all: it gets exactly what it would on a PC.
 
-# Start and Select are deliberately unmapped.
-#
-# The game needs neither: it is played entirely with the pointer, and the
-# profile name is filled in automatically because a handheld has no keyboard.
-# Sending them to the game only creates a way for it to react to a button the
-# player pressed for the firmware, not for the game.
-back = \"
-start = \"
+back = escape
+start = enter
 
 # A feeds / collects / shoots; B is right click (release pet, cancel).
 a = mouse_left
