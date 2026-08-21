@@ -54,7 +54,7 @@ fi
 [ "$missing" = "0" ] || exit 1
 
 rm -rf "$DIST"
-mkdir -p "$GAME/libs.aarch64"
+mkdir -p "$GAME"
 
 cp "$BIN" "$GAME/Insaniquarium"
 chmod +x "$GAME/Insaniquarium"
@@ -100,15 +100,21 @@ du -sh "$DIST"
 
 ZIP="$ROOT/port/insaniquarium.zip"
 rm -f "$ZIP"
+# The port script has to come out of the zip executable. Compress-Archive
+# records DOS attributes only, so everything it writes extracts without the
+# execute bit and the port will not launch after an automatic install. zip
+# stores real Unix permissions, so use it even when it only exists in WSL.
+chmod +x "$DIST/Insaniquarium Deluxe.sh" "$DIST/insaniquarium/Insaniquarium"
+
 if command -v zip >/dev/null 2>&1; then
   (cd "$DIST" && zip -qr "$ZIP" .)
-elif command -v powershell.exe >/dev/null 2>&1; then
-  # Git Bash has no zip. Compress-Archive does not preserve the execute bit,
-  # which does not matter: the launcher chmod +x's the binary before running.
-  powershell.exe -NoProfile -Command \
-    "Compress-Archive -Path '$(cygpath -w "$DIST")\\*' -DestinationPath '$(cygpath -w "$ZIP")' -Force"
+elif command -v wsl.exe >/dev/null 2>&1; then
+  WSL_DIST=$(wsl.exe -e wslpath "$(cygpath -w "$DIST")" | tr -d "\r")
+  WSL_ZIP=$(wsl.exe -e wslpath "$(cygpath -w "$ZIP")" | tr -d "\r")
+  wsl.exe -e sh -c "cd '$WSL_DIST' && zip -qr '$WSL_ZIP' ."
 else
-  echo "nothing available to compress with; the folder is in $DIST"
-  exit 0
+  echo "no zip available; it stores the execute bit Compress-Archive drops"
+  echo "the unpacked port is in $DIST"
+  exit 1
 fi
 echo "zip: $ZIP ($(du -h "$ZIP" | cut -f1))"

@@ -38,7 +38,11 @@ mkdir -p "$SRC"
 # directories, but the pattern matches any directory of that name at any depth,
 # including libopenmpt/build/, which holds the svn_version.h its version.cpp
 # needs.
-rsync -a --delete \
+# --checksum compares contents, not timestamps. rsync preserves mtimes, so a
+# file reverted to an earlier state can arrive older than the object built
+# from it, and ninja then rebuilds nothing while the stale code stays in the
+# binary. That failure is silent: the build reports success.
+rsync -a --checksum --delete \
       --include 'external/libopenmpt/build/' \
       --include 'external/libopenmpt/build/**' \
       --exclude 'build/' --exclude 'bin/' --exclude 'android/' \

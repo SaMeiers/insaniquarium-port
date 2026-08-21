@@ -19,8 +19,8 @@ PM="$ROOT/port/portmaster"
 [ -d "$DEST" ] || { echo "cannot find $DEST (is the card inserted?)"; exit 1; }
 [ -f "$BIN" ]  || { echo "missing binary: $BIN"; exit 1; }
 
-mkdir -p "$GAME/libs.aarch64"
 
+mkdir -p "$GAME"
 cp "$BIN" "$GAME/Insaniquarium"
 cp -r "$PM/insaniquarium/." "$GAME/"
 cp "$PM/Insaniquarium Deluxe.sh" "$DEST/"
