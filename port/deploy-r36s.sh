@@ -22,10 +22,16 @@ PM="$ROOT/port/portmaster"
 mkdir -p "$GAME/libs.aarch64"
 
 cp "$BIN" "$GAME/Insaniquarium"
-cp "$PM/insaniquarium.gptk"      "$GAME/"
-cp "$PM/alsoft.conf"             "$GAME/"
-cp "$PM/port.json"               "$GAME/"
+cp -r "$PM/insaniquarium/." "$GAME/"
 cp "$PM/Insaniquarium Deluxe.sh" "$DEST/"
+
+# The same moves the official builder makes when it zips a port.
+cp "$PM/port.json"    "$GAME/port.json"
+cp "$PM/gameinfo.xml" "$GAME/gameinfo.xml"
+cp "$PM/README.md"    "$GAME/insaniquarium.md"
+for s in "$PM"/screenshot.png "$PM"/cover.png; do
+  [ -f "$s" ] && cp "$s" "$GAME/"
+done
 
 # CRLF: the device shell does not forgive it ("bad interpreter: /bin/bash^M"),
 # and a .gptk with CRLF fails worse than that -- gptokeyb reads "mouse_left\r"

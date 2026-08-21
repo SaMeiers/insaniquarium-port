@@ -43,6 +43,11 @@ export ALSOFT_DRIVERS="${ALSOFT_DRIVERS:-alsa}"
 # that any hitch in the game breaks the music up.
 export ALSOFT_CONF="$GAMEDIR/alsoft.conf"
 
+# TEMPORARY, while tracking down the freeze some buttons cause: log every key
+# event the game receives and how long it takes to handle it. Remove once that
+# is resolved.
+export POPLIB_LOG_KEYS=1
+
 # The game starts windowed and remembers that choice, but there is no desktop
 # here to put a window on, nor a way to reach the options screen beforehand.
 export POPLIB_FULLSCREEN=1
