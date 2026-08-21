@@ -24,12 +24,17 @@ BINARY="Insaniquarium"
 
 cd "$GAMEDIR"
 
-> "$GAMEDIR/log.txt" && exec > >(tee "$GAMEDIR/log.txt") 2>&1
+# Straight to a file, deliberately not through `tee`.
+#
+# The usual `exec > >(tee log.txt) 2>&1` puts a pipe and a second process
+# between the game and the log. Whatever stops reading that pipe takes the game
+# down with it, and the tail of the log is lost when the port is killed rather
+# than closed. Writing to a file has neither problem.
+exec > "$GAMEDIR/log.txt" 2>&1
 
 $ESUDO chmod +x "$GAMEDIR/$BINARY"
 
 export SDL_GAMECONTROLLERCONFIG="$sdl_controllerconfig"
-export LD_LIBRARY_PATH="$GAMEDIR/libs.aarch64:$LD_LIBRARY_PATH"
 
 # There is no PulseAudio server here and both SDL and OpenAL probe it first,
 # which is where "Failed to create secure directory (/run/user/.../pulse)" in
@@ -43,13 +48,9 @@ export ALSOFT_DRIVERS="${ALSOFT_DRIVERS:-alsa}"
 # that any hitch in the game breaks the music up.
 export ALSOFT_CONF="$GAMEDIR/alsoft.conf"
 
-# TEMPORARY, while tracking down the freeze some buttons cause: log every key
-# event the game receives and how long it takes to handle it. Remove once that
-# is resolved.
-export POPLIB_LOG_KEYS=1
-
 # The game starts windowed and remembers that choice, but there is no desktop
 # here to put a window on, nor a way to reach the options screen beforehand.
+
 export POPLIB_FULLSCREEN=1
 
 # The game draws the pointer itself. There is no desktop cursor here, and under

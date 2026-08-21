@@ -80,6 +80,18 @@ void OnCrash(int theSignal)
 	raise(theSignal);
 }
 
+// A signal that is not fatal, but is worth knowing about. Something outside the
+// game -- the firmware's button daemon, a hotkey helper -- can send these, and
+// on a handheld there is no terminal to notice it on.
+void OnSignal(int theSignal)
+{
+	WriteStr("[signal ");
+	WriteHex((unsigned long)theSignal);
+	WriteStr(" received]\n");
+	signal(theSignal, SIG_DFL);
+	raise(theSignal);
+}
+
 struct Installer
 {
 	Installer()
@@ -89,6 +101,16 @@ struct Installer
 		signal(SIGFPE, OnCrash);
 		signal(SIGILL, OnCrash);
 		signal(SIGABRT, OnCrash);
+
+		// SIGSTOP cannot be caught, but every other way of being suspended or
+		// asked to quit can, and any of them would look like a freeze.
+		signal(SIGTSTP, OnSignal);
+		signal(SIGTTIN, OnSignal);
+		signal(SIGTTOU, OnSignal);
+		signal(SIGHUP, OnSignal);
+		signal(SIGUSR2, OnSignal);
+
+		// Not fatal: this one reports and returns.
 	}
 };
 
