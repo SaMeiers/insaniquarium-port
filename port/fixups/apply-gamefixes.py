@@ -97,6 +97,52 @@ def main():
               b"for (int i = 0; i < (sizeof(mCheatCodes) / sizeof(mCheatCodes[0])); i++)",
               "Board::KeyDown: cheat code loop ran past the end of the array")
 
+
+    # --- 3. Star potion never turns a big guppy into a star guppy -----------
+    #
+    # Symptom: a big fish eats a star potion and nothing happens; it never
+    # starts producing stars.
+    #
+    # Cause: the branch already knows the food is type 3, and then asks whether
+    # it is type 2:
+    #
+    #     else if (aFood->mFoodType == 3)     // the potion
+    #         ...
+    #         if (aFood->mFoodType == 2)      // cannot ever be true
+    #             mSize = SIZE_STAR;
+    #
+    # so the one assignment that makes a star guppy is unreachable. That
+    # matters because DropCoin picks the coin with `aCoinType = mSize`, and
+    # SIZE_STAR (3) is COIN_STAR (3): the size *is* what produces stars.
+    #
+    # The condition was `mSize == 2`, that is SIZE_LARGE. The constant 2
+    # survived the decompilation but was attached to the wrong variable, and
+    # the clamp on mHunger appearing in both branches is the usual sign of a
+    # decompiler splitting one `if`. Reading it as SIZE_LARGE also matches what
+    # the game itself says -- "Star potions are for BIG guppies only" -- and
+    # leaves crowned guppies alone, which a bare `else` would demote.
+    ok &= sub("Fish.cpp",
+              b"if (aFood->mFoodType == 2)",
+              b"if (mSize == SIZE_LARGE)",
+              "Fish: star potion could never turn a big guppy into a star guppy")
+
+    # --- 4. Pets spawn with their X and Y ranges swapped --------------------
+    #
+    # Every other spawn in the game -- thirteen of them -- places an object
+    # with X across the tank and Y down it:
+    #
+    #     new Fish(Next() % 520 + 20, Next() % 265 + 105);
+    #
+    # SpawnPet is the only one with the two the other way round, so pets appear
+    # in a narrow vertical strip in the middle instead of anywhere across the
+    # tank, and start at a depth the movement code has to pull back into range.
+    ok &= sub("Board.cpp",
+              b"\t\ttheX = mApp->mSeed->Next() % 265 + 105;\r\n"
+              b"\t\ttheY = mApp->mSeed->Next() % 520 + 20;",
+              b"\t\ttheX = mApp->mSeed->Next() % 520 + 20;\r\n"
+              b"\t\ttheY = mApp->mSeed->Next() % 265 + 105;",
+              "Board::SpawnPet: X and Y spawn ranges were swapped")
+
     return 0 if ok else 1
 
 
