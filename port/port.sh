@@ -8,7 +8,7 @@
 set -u
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-SRC="${WINFISH_SRC:-$ROOT/source/WinFish}"
+SRC="${WINFISH_SRC:-$ROOT/external/winfish/source/WinFish}"
 DST="$ROOT/port/winfish"
 MAP="$ROOT/port/include-map.txt"
 

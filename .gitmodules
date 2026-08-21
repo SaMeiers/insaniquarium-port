@@ -1,0 +1,6 @@
+[submodule "poplib"]
+	path = poplib
+	url = https://github.com/SaMeiers/PopLib.git
+[submodule "external/winfish"]
+	path = external/winfish
+	url = https://github.com/vindirect/winfish.git

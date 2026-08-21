@@ -34,17 +34,17 @@ AGPL-3.0, inherited from PopLib. See `LICENSE`.
 ## Layout
 
 ```
-port/           the port: build files, scripts, fixups, PortMaster packaging
-poplib/         submodule, the framework (fork, with this port's fixes)
-source/WinFish/ submodule, the decompilation (unmodified)
+port/             the port: build files, scripts, fixups, PortMaster packaging
+poplib/           submodule, the framework (fork, with this port's fixes)
+external/winfish/ submodule, the decompilation (unmodified)
 ```
 
 ## How the port works
 
-`source/WinFish/` is never modified. `port/port.sh` regenerates `port/winfish/`
-from it on every run: it rewrites includes, renames the framework's types, and
-applies the fixups in `port/fixups/`. The decompilation can therefore be updated
-upstream and the port re-derived on top.
+The decompilation is never modified. `port/port.sh` regenerates `port/winfish/`
+from `external/winfish/` on every run: it rewrites includes, renames the
+framework's types, and applies the fixups in `port/fixups/`. The decompilation
+can therefore be updated upstream and the port re-derived on top.
 
 The fixups are split by intent:
 
