@@ -1,44 +1,40 @@
 {
-    "version": 4,
-    "name": "insaniquarium.zip",
-    "items": [
-        "Insaniquarium Deluxe.sh",
-        "insaniquarium"
+  "version": 4,
+  "name": "insaniquarium",
+  "items": [
+    "Insaniquarium Deluxe",
+    "insaniquarium"
+  ],
+  "items_opt": [],
+  "attr": {
+    "title": "Insaniquarium Deluxe",
+    "porter": [
+      "SaMeiers"
     ],
-    "items_opt": null,
-    "attr": {
-        "title": "Insaniquarium Deluxe",
-        "porter": [
-            "SaMeiers"
-        ],
-        "desc": "Insaniquarium Deluxe (PopCap, 2004) running natively on aarch64.\n\nNot an emulator: this is the WinFish decompilation of the game, ported from the original SexyAppFramework to PopLib, which replaces DirectDraw with SDL3. Module music is played with libopenmpt. The binary is native aarch64 and depends on no closed-source libraries.\n\nThe game is played entirely with the pointer, so the gamepad acts as a mouse: stick and d-pad move it, A left clicks, B right clicks, and L1/R1 slow it down for hitting coins and small fish.\n\nKNOWN ISSUE: on the R36S, using the hardware volume buttons during a game can freeze the picture briefly. Reports from other devices are welcome.",
-        "desc_md": null,
-        "inst": "This port does NOT include the game. Copy the data, images, music, properties, sounds and fishsongs folders from your copy of Insaniquarium Deluxe (Steam or GOG) into ports/insaniquarium/.\n\nWatch the letter case: Windows ignores it and Linux does not. If the game complains about an image that clearly exists, that is almost always why.",
-        "inst_md": null,
-        "genres": [
-            "arcade",
-            "strategy"
-        ],
-        "image": {},
-        "rtr": false,
-        "exp": true,
-        "runtime": null,
-        "store": [],
-        "availability": "paid",
-        "reqs": [],
-        "arch": [
-            "aarch64"
-        ],
-        "min_glibc": "2.30"
-    },
-    "status": {
-        "source": "Unknown",
-        "md5": null,
-        "status": "Installed"
-    },
-    "files": {
-        "port.json": "insaniquarium/port.json",
-        "Insaniquarium Deluxe.sh": "Insaniquarium Deluxe.sh",
-        "insaniquarium": "insaniquarium"
-    }
+    "desc": "Insaniquarium Deluxe For The R36s! It is the mythical popcap game where you must take care of your fish tank with a variety of fish, beware of the alien invasion! ",
+    "desc_md": null,
+    "inst": "You need the original assets of your original copy of Insaniquarium Deluxe, the gog.com versión or steam.com",
+    "inst_md": null,
+    "genres": [
+      "action",
+      "strategy"
+    ],
+    "image": null,
+    "rtr": true,
+    "exp": false,
+    "runtime": [],
+    "store": [
+      {
+        "name": "Steam",
+        "gameurl": "https://store.steampowered.com/app/3320/Insaniquarium_Deluxe/",
+        "developerurl": ""
+      }
+    ],
+    "availability": "paid",
+    "reqs": [],
+    "arch": [
+      "aarch64"
+    ],
+    "min_glibc": ""
+  }
 }
