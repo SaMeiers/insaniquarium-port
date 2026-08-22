@@ -50,7 +50,6 @@ export ALSOFT_CONF="$GAMEDIR/alsoft.conf"
 
 # The game starts windowed and remembers that choice, but there is no desktop
 # here to put a window on, nor a way to reach the options screen beforehand.
-
 export POPLIB_FULLSCREEN=1
 
 # The game draws the pointer itself. There is no desktop cursor here, and under
@@ -132,21 +131,27 @@ if [ "$aStatus" -ne 0 ]; then
   ls -l /dev/fb* 2>&1
   ls /sys/class/drm/ 2>&1
 
-  # SDL3 can only put an image on screen through DRM/KMS, X11 or Wayland. A
-  # device with none of those cannot run this port at all, and saying so beats
-  # leaving someone to work it out from "no available video device".
+  # Stock SDL3 reaches a screen through DRM/KMS, X11 or Wayland and nothing
+  # else. This build also carries a Mali framebuffer driver for machines that
+  # have none of them, so a device like that is no longer out of reach -- but
+  # it does narrow down what to look at.
   if [ ! -d /dev/dri ] && [ -z "$DISPLAY" ] && [ -z "$WAYLAND_DISPLAY" ]; then
     echo
-    echo "This device has no DRM/KMS, and no X or Wayland session either."
-    echo "SDL3 has no framebuffer backend, so it cannot display anything here."
-    echo "That is a property of the firmware, not of this port."
+    echo "No DRM/KMS here, and no X or Wayland session, so the only path left"
+    echo "is the Mali framebuffer driver. If that failed too, the framebuffer"
+    echo "listed above and the EGL error below are where the reason is."
   fi
 
-  echo "--- retrying with kmsdrm named ---"
   # Given no driver name, SDL reports only that every driver failed, which
-  # hides why each one did. Naming one makes it report that driver's own error.
-  SDL_VIDEODRIVER=kmsdrm ./"$BINARY"
-  echo "=== kmsdrm attempt exited with status $? ==="
+  # hides why each one did. Naming one makes it report that driver's own
+  # error. Stop at the first that works: if one does, that is the answer.
+  for aDriver in kmsdrm mali; do
+    echo "--- retrying with $aDriver named ---"
+    SDL_VIDEODRIVER=$aDriver ./"$BINARY"
+    aRetry=$?
+    echo "=== $aDriver attempt exited with status $aRetry ==="
+    [ "$aRetry" -eq 0 ] && break
+  done
 fi
 
 pm_finish
