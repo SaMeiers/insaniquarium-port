@@ -55,10 +55,14 @@ them and copying the folder to another card keeps them.
 
 ## Requirements
 
-The device has to give SDL3 a way to put an image on screen: DRM/KMS, X11 or
-Wayland. Firmware built on a kernel that offers only a framebuffer -- muOS on
-the RG35XX-SP, for one -- has none of them, and no build of this port can run
-there. It says so in `log.txt` and exits rather than crashing.
+The device needs a way to put an image on screen: DRM/KMS, or a Mali GPU on a
+framebuffer. Stock SDL3 only knows the first, which left out handhelds on older
+Allwinner BSP kernels -- the Anbernic RG35XX family on the H700, where there is
+no `/dev/dri` at all -- so the framework fork this port builds against adds a
+framebuffer driver for them. SDL still prefers DRM/KMS wherever it exists.
+
+If a device has neither, the port says so in `log.txt` and exits rather than
+crashing.
 
 ## Known issues
 
