@@ -62,6 +62,12 @@ export POPLIB_FULLSCREEN=1
 # unplayable.
 export POPLIB_SOFTWARE_CURSOR=1
 
+# There is no keyboard on a handheld, so every dialog that asks for text -- the
+# profile name, naming a fish -- is a dead end without this. The framework
+# raises a clickable keyboard whenever a text field takes focus; the pointer
+# the gamepad already drives is all it needs.
+export POPLIB_ONSCREEN_KEYBOARD=1
+
 # Profiles and high scores inside the port folder rather than /root/.config: on
 # several firmwares the system partition is read-only, and this way deleting the
 # port removes everything and copying it to another card keeps the saves.

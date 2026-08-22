@@ -44,6 +44,13 @@ FISHSONGS_NEW = b'''	std::vector<std::string> aSongFiles;
 # The loop body: do/while(FindNextFileA) becomes a range-for over aSongFiles.
 # The original semantics are preserved, including the name split and the
 # long/short classification.
+#
+# The path each song is opened with changes too. Enumerating them was
+# ported and the separator was not, so every Parse() looked for a file
+# called "fishsongs\name.txt" and failed. The game notes that in
+# fishsongerror.txt and carries on with no songs loaded, which is why no
+# fish has ever sung: not the store's singing fish, not Ludwig, not the
+# Santa easter egg.
 LOOP_OLD = b'''	do \n	{
 		FishSongData* aNewSong = new FishSongData();
 		gSongsVector1.push_back(aNewSong);
@@ -57,7 +64,7 @@ LOOP_NEW = b'''	for (const std::string &aFileName : aSongFiles)
 		FishSongData* aNewSong = new FishSongData();
 		gSongsVector1.push_back(aNewSong);
 
-		PopString aFilePath = "fishsongs\\\\";
+		PopString aFilePath = "fishsongs/";
 		aFilePath.append(aFileName);
 '''
 
