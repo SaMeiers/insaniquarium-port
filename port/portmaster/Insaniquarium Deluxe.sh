@@ -91,7 +91,13 @@ fi
 # .gptk). Speed scales with the screen: the same stick deflection should cover
 # the same fraction of the screen at 480p and at 720p, or the pointer crawls on
 # the bigger one and bolts on the smaller.
-if [ "$DISPLAY_WIDTH" -gt 720 ]; then
+#
+# DISPLAY_WIDTH comes from the CFW and is not set everywhere. Unset, the test
+# fails with "integer expression expected" and takes the else branch anyway, so
+# the pointer ends up tuned for a small screen on a large one and the only clue
+# is a shell error in the log. Default to the smaller: too slow on a big screen
+# is playable, too fast on a small one is not.
+if [ "${DISPLAY_WIDTH:-640}" -gt 720 ]; then
   MOUSE_SCALE=4000
   MOUSE_DELAY=8
   DPAD_STEP=5
