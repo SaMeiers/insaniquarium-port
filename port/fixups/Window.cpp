@@ -94,6 +94,15 @@ int main(int argc, char *argv[])
 
 	WinFishApp *aTheApp = new WinFishApp();
 
+	// With no video device there is no window, no renderer and no interface, and
+	// carrying on crashes further in: parsing the resources asks the interface
+	// whether 3D is available. The reason was already reported, so stop here.
+	if (aTheApp->mShutdown)
+	{
+		delete aTheApp;
+		return 1;
+	}
+
 	aTheApp->Init();
 	aTheApp->Start();
 	aTheApp->Shutdown();
