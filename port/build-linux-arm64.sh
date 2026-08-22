@@ -97,6 +97,11 @@ cmake -S "$SRC/port" -B "$BUILD" -G Ninja \
   `# Music goes through libopenmpt. Without turning BASS off the binary still` \
   `# links libbass.so even though nothing uses it.` \
   -DPOPLIB_WITH_BASS=OFF \
+  `# Handhelds on older Allwinner BSP kernels have no DRM at all: no` \
+  `# /dev/dri, no /sys/class/drm, only /dev/fb0 and the Mali blob.` \
+  `# KMSDRM cannot reach them, so build the framebuffer driver too and` \
+  `# let SDL pick whichever one the device can actually use.` \
+  -DSDL_MALI=ON \
   "$@"
 
 cmake --build "$BUILD" --parallel
