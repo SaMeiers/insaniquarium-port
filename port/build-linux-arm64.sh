@@ -113,8 +113,22 @@ file "$BIN"
 
 # These two decide whether the binary starts on the device, and the compiler
 # catches neither.
-echo "--- highest glibc version required (must be <= 2.30 for ArkOS) ---"
+# The number in port.json is what PortMaster filters devices on, so a binary
+# that outgrows it silently stops being offered to machines that could run it,
+# and one that undershoots is offered to machines that cannot. Neither shows up
+# in a build log, so compare the two here rather than trusting a comment.
+echo "--- highest glibc version required ---"
 aarch64-linux-gnu-objdump -T "$BIN" | grep -o 'GLIBC_[0-9.]*' | sort -uV | tail -5
+
+NEEDED=$(aarch64-linux-gnu-objdump -T "$BIN" | grep -o 'GLIBC_[0-9.]*' \
+         | sort -uV | tail -1 | sed 's/GLIBC_//')
+DECLARED=$(grep -o '"min_glibc"[^,]*' "$WINSRC/port/portmaster/port.json" \
+           | grep -o '[0-9][0-9.]*')
+if [ "$NEEDED" = "$DECLARED" ]; then
+  echo "  port.json declares $DECLARED, which matches"
+else
+  echo "  *** port.json declares $DECLARED but the binary needs $NEEDED ***"
+fi
 
 # glibc 2.34 removed __libc_csu_init and changed how global constructors are
 # started. A binary linked against >= 2.34 compiles and links fine but runs no
