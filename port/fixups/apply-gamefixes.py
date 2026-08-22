@@ -143,6 +143,35 @@ def main():
               b"\t\ttheY = mApp->mSeed->Next() % 265 + 105;",
               "Board::SpawnPet: X and Y spawn ranges were swapped")
 
+
+
+    # --- 5. Saved games are written to a path with a Windows separator ------
+    #
+    # Symptom: on a tester's device nothing bought in the virtual tank was
+    # there on the next run, while the profile itself -- unlocks, shells --
+    # survived.
+    #
+    # Cause: GetSaveGameFilePath builds the name with a backslash:
+    #
+    #     sprintf(aPathBuffer, "userdata\%s%d.dat", aGameModeString, theUserId);
+    #
+    # so the result is not a file inside userdata but a single file named
+    # "userdata\virtualtank0.dat" sitting beside it. WriteBytesToFile calls
+    # MkDir(GetFileDir(path)) first, and GetFileDir splits on '/', so it
+    # creates the folder above and never notices.
+    #
+    # On ext4 a backslash is a legal filename character, so the odd name is
+    # created and everything works, which is why this never showed up on the
+    # devices we test on. FAT is what a handheld's card usually is, and it
+    # rejects the name: fopen fails, WriteBytesToFile returns false, and
+    # nobody checks the result. The save is lost without a word.
+    #
+    # The profile survived because its own path, "userdata/user%d.dat", uses
+    # the right separator already.
+    ok &= sub("ProfileMgr.cpp",
+              b'sprintf(aPathBuffer, "userdata\\\\%s%d.dat", aGameModeString, theUserId);',
+              b'sprintf(aPathBuffer, "userdata/%s%d.dat", aGameModeString, theUserId);',
+              "UserProfile: saved games went to a path with a Windows separator")
     return 0 if ok else 1
 
 
