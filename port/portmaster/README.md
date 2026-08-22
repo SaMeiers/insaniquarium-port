@@ -53,6 +53,13 @@ Profiles and high scores are kept in `ports/insaniquarium/conf/`, inside the
 port folder rather than in the system partition, so deleting the port removes
 them and copying the folder to another card keeps them.
 
+## Requirements
+
+The device has to give SDL3 a way to put an image on screen: DRM/KMS, X11 or
+Wayland. Firmware built on a kernel that offers only a framebuffer -- muOS on
+the RG35XX-SP, for one -- has none of them, and no build of this port can run
+there. It says so in `log.txt` and exits rather than crashing.
+
 ## Known issues
 
 - The picture can pause briefly every few minutes. The display driver's pageflip

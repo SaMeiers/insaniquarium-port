@@ -113,5 +113,40 @@ if type pm_platform_helper >/dev/null 2>&1; then
 fi
 
 ./"$BINARY"
+aStatus=$?
+
+# Everything a bug report needs, gathered here rather than asked of the player:
+# a handheld has no keyboard and no terminal, so "run these commands and send
+# the output" is not something most people can do. Sending log.txt is. It only
+# runs when something went wrong, so a working session keeps a clean log.
+if [ "$aStatus" -ne 0 ]; then
+  echo
+  echo "=== exited with status $aStatus ==="
+  echo "cfw: ${CFW_NAME:-unknown}  device: ${DEVICE_NAME:-unknown}  dir: $directory"
+  uname -a
+  [ -f /etc/os-release ] && grep -E "^(NAME|VERSION)=" /etc/os-release
+  echo "user: $(id 2>&1)"
+
+  echo "--- display ---"
+  ls -l /dev/dri/ 2>&1
+  ls -l /dev/fb* 2>&1
+  ls /sys/class/drm/ 2>&1
+
+  # SDL3 can only put an image on screen through DRM/KMS, X11 or Wayland. A
+  # device with none of those cannot run this port at all, and saying so beats
+  # leaving someone to work it out from "no available video device".
+  if [ ! -d /dev/dri ] && [ -z "$DISPLAY" ] && [ -z "$WAYLAND_DISPLAY" ]; then
+    echo
+    echo "This device has no DRM/KMS, and no X or Wayland session either."
+    echo "SDL3 has no framebuffer backend, so it cannot display anything here."
+    echo "That is a property of the firmware, not of this port."
+  fi
+
+  echo "--- retrying with kmsdrm named ---"
+  # Given no driver name, SDL reports only that every driver failed, which
+  # hides why each one did. Naming one makes it report that driver's own error.
+  SDL_VIDEODRIVER=kmsdrm ./"$BINARY"
+  echo "=== kmsdrm attempt exited with status $? ==="
+fi
 
 pm_finish
