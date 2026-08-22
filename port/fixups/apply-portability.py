@@ -464,6 +464,44 @@ def main():
 #include <cstdlib>''',
               "NewUserDialog: cstdlib para rand()")
 
+
+    # --- the last Windows path separators -----------------------------------
+    #
+    # partner.xml has never been read. It is opened as "properties\\partner.xml",
+    # which on Linux names a file that does not exist, and it is optional so
+    # nothing complains. The file is real and ships with the game's data: it
+    # carries NoReg, which is what tells the game this copy is registered, so
+    # without it the game believes it is not and offers to sell itself.
+    #
+    # The signature check has to go with it. PopLib's CheckSignature is a stub
+    # returning false whatever it is handed, so a file that now loads would be
+    # met with a popup refusing it -- worse than the silence it replaces. There
+    # is nothing to protect either: the data comes from the player's own copy.
+    aBS = chr(92)
+    aSep = (aBS + aBS).encode()
+
+    ok &= sub("SexyApp.cpp",
+              b"bool checkSig = !IsScreenSaver();",
+              b"bool checkSig = false; // PopLib has no signature implementation",
+              "SexyApp: partner.xml was asked for a signature that cannot pass")
+
+    ok &= sub("SexyApp.cpp",
+              b'"properties' + aSep + b'partner.xml"',
+              b'"properties/partner.xml"',
+              "SexyApp: partner.xml was opened with a Windows separator")
+
+    # Unreachable in practice -- it needs a Windows screensaver path to exist
+    # first -- but it is the same mistake and cheap to correct.
+    ok &= sub("WinFishApp.cpp",
+              b'GetAppDataFolder() + "' + aSep + b'screensaver.dat"',
+              b'GetAppDataFolder() + "screensaver.dat"',
+              "WinFishApp: screensaver.dat under the data folder")
+
+    ok &= sub("WinFishApp.cpp",
+              b'GetFileDir(theScrSvrPath) + "' + aSep + b'screensaver.dat"',
+              b'GetFileDir(theScrSvrPath) + "/screensaver.dat"',
+              "WinFishApp: screensaver.dat beside the screensaver")
+
     return 0 if ok else 1
 
 
