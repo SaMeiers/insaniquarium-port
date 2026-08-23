@@ -44,8 +44,14 @@ The game is played entirely with the pointer, so the gamepad acts as a mouse.
 | A | Left click — feed, collect coins, shoot |
 | B | Right click — release pet, cancel |
 | L1 / R1 | Move the pointer slowly, for coins and small fish |
+| Y | Collect every coin at once, if Auto Collect is on |
 | Start | Enter |
 | Select | Escape |
+
+**Auto Collect** is off, in Options. A tank full of coins is a lot of presses
+of the same button, so this sweeps them all in one. It does make the collecting
+pets less useful, which is why it asks before switching on and stays off unless
+you say yes.
 
 ## Saves
 

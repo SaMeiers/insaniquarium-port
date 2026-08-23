@@ -14,7 +14,9 @@ a = mouse_left
 b = mouse_right
 
 x = \"
-y = \"
+# Auto Collect, when it is switched on in Options. F1 rather than a letter:
+# the cheat code scanner reads letters out of the same handler.
+y = f1
 
 # Small fish and coins are tiny targets at 640x480; without a slow mode they
 # are hard to hit with the stick.

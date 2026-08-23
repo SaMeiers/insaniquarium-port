@@ -166,6 +166,13 @@ if [ -f "$ROOT/port/fixups/apply-gamefixes.py" ]; then
   python "$ROOT/port/fixups/apply-gamefixes.py" || echo "   WARNING: a game fix did not apply"
 fi
 
+# Things the original game does not have, added because it is played on a
+# handheld; see fixups/apply-portfeatures.py. Kept last and separate so the
+# list of what was added never gets mixed up with the list of what was fixed.
+if [ -f "$ROOT/port/fixups/apply-portfeatures.py" ]; then
+  python "$ROOT/port/fixups/apply-portfeatures.py" || echo "   WARNING: a port feature did not apply"
+fi
+
 # Entry point: WinMain -> main
 if [ -f "$ROOT/port/fixups/Window.cpp" ]; then
   cp "$ROOT/port/fixups/Window.cpp" "$DST/Window.cpp"
