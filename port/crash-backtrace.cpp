@@ -25,6 +25,7 @@
 #include <execinfo.h>
 #include <link.h>
 #include <unistd.h>
+#include <sys/mman.h>
 
 namespace
 {
@@ -57,8 +58,17 @@ int FirstObject(struct dl_phdr_info *theInfo, size_t, void *theOut)
 	return 1; // stop
 }
 
-void OnCrash(int theSignal)
+// Somewhere for the handler to run when the ordinary stack is the problem.
+// A stack overflow raises SIGSEGV with no room left to call anything, so a
+// handler on the same stack never starts and the crash passes in silence --
+// which is exactly what two reports of this have looked like.
+static char gSignalStack[SIGSTKSZ < 65536 ? 65536 : SIGSTKSZ];
+
+void OnCrash(int theSignal, siginfo_t *theInfo, void *theContext)
 {
+	// Said before anything that could itself fail. A backtrace through a
+	// wrecked stack can take the handler down with it, and then even the
+	// signal number is lost.
 	WriteStr("\n=== crash, signal ");
 	WriteHex((unsigned long)theSignal);
 	WriteStr(" ===\nload base: ");
@@ -66,6 +76,18 @@ void OnCrash(int theSignal)
 	unsigned long aBase = 0;
 	dl_iterate_phdr(FirstObject, &aBase);
 	WriteHex(aBase);
+	WriteStr("\nfault address: ");
+	WriteHex(theInfo != nullptr ? (unsigned long)theInfo->si_addr : 0);
+	WriteStr("\n");
+
+	// Whether the faulting address sits just past the guard page of a stack
+	// says overflow rather than a stray pointer, and the two want looking at
+	// in completely different places.
+	WriteStr("stack pointer: ");
+	{
+		char aLocal;
+		WriteHex((unsigned long)&aLocal);
+	}
 	WriteStr("\n");
 
 	void *aFrames[64];
@@ -96,11 +118,25 @@ struct Installer
 {
 	Installer()
 	{
-		signal(SIGSEGV, OnCrash);
-		signal(SIGBUS, OnCrash);
-		signal(SIGFPE, OnCrash);
-		signal(SIGILL, OnCrash);
-		signal(SIGABRT, OnCrash);
+		// sigaltstack, so the handler has somewhere to run when the crash is
+		// the stack itself. signal() cannot ask for that; sigaction can.
+		stack_t aStack;
+		aStack.ss_sp = gSignalStack;
+		aStack.ss_size = sizeof(gSignalStack);
+		aStack.ss_flags = 0;
+		sigaltstack(&aStack, nullptr);
+
+		struct sigaction anAction;
+		memset(&anAction, 0, sizeof(anAction));
+		anAction.sa_sigaction = OnCrash;
+		anAction.sa_flags = SA_SIGINFO | SA_ONSTACK | SA_RESETHAND;
+		sigemptyset(&anAction.sa_mask);
+
+		sigaction(SIGSEGV, &anAction, nullptr);
+		sigaction(SIGBUS, &anAction, nullptr);
+		sigaction(SIGFPE, &anAction, nullptr);
+		sigaction(SIGILL, &anAction, nullptr);
+		sigaction(SIGABRT, &anAction, nullptr);
 
 		// SIGSTOP cannot be caught, but every other way of being suspended or
 		// asked to quit can, and any of them would look like a freeze.

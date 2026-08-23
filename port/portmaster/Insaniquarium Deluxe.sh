@@ -154,16 +154,25 @@ if [ "$aStatus" -ne 0 ]; then
     echo "listed above and the EGL error below are where the reason is."
   fi
 
-  # Given no driver name, SDL reports only that every driver failed, which
-  # hides why each one did. Naming one makes it report that driver's own
-  # error. Stop at the first that works: if one does, that is the answer.
-  for aDriver in kmsdrm mali; do
-    echo "--- retrying with $aDriver named ---"
-    SDL_VIDEODRIVER=$aDriver ./"$BINARY"
-    aRetry=$?
-    echo "=== $aDriver attempt exited with status $aRetry ==="
-    [ "$aRetry" -eq 0 ] && break
-  done
+  # Retry only what looks like a failure to start. A status of 128 or more is
+  # a signal: the game ran and then died, and starting it again just drops the
+  # player back at the loading screen as though the port had restarted itself,
+  # which is what it looked like from the outside the first time this happened.
+  if [ "$aStatus" -ge 128 ]; then
+    echo "Killed by signal $((aStatus - 128)) after starting, so this is a crash"
+    echo "rather than a display problem. The backtrace above says where."
+  else
+    # Given no driver name, SDL reports only that every driver failed, which
+    # hides why each one did. Naming one makes it report that driver's own
+    # error. Stop at the first that works: if one does, that is the answer.
+    for aDriver in kmsdrm mali; do
+      echo "--- retrying with $aDriver named ---"
+      SDL_VIDEODRIVER=$aDriver ./"$BINARY"
+      aRetry=$?
+      echo "=== $aDriver attempt exited with status $aRetry ==="
+      [ "$aRetry" -eq 0 ] && break
+    done
+  fi
 fi
 
 pm_finish
