@@ -172,6 +172,113 @@ def main():
               b'sprintf(aPathBuffer, "userdata\\\\%s%d.dat", aGameModeString, theUserId);',
               b'sprintf(aPathBuffer, "userdata/%s%d.dat", aGameModeString, theUserId);',
               "UserProfile: saved games went to a path with a Windows separator")
+    # --- 6. The fish buttons are only a quarter cleared ---------------------
+    #
+    # Symptom: opening add/remove fish in the virtual tank segfaults, in
+    # WidgetContainer::InsertWidgetHelper, reached from
+    # SimFishScreen::AddedToManager.
+    #
+    # Cause: the array holds twenty pointers and is cleared with a byte count
+    # of twenty:
+    #
+    #     FishButtonWidget *mObjectButtons[20];
+    #     memset(mObjectButtons, 0, 20);
+    #
+    # A pointer is eight bytes here, so that zeroes two and a half of them and
+    # leaves seventeen holding whatever was on the heap. The constructor then
+    # fills the gaps with `if (mObjectButtons[i] == nullptr)`, which skips
+    # every slot whose garbage happens not to be zero, and AddedToManager hands
+    # all twenty to AddWidget. InsertWidgetHelper reads mZOrder through them.
+    #
+    # It was wrong on the original 32-bit build too, where twenty bytes covered
+    # five pointers of the twenty; sixty-four bit arithmetic only makes a
+    # latent bug reliable.
+    ok &= sub("SimFishScreen.cpp",
+              b"memset(mObjectButtons, 0, 20);",
+              b"memset(mObjectButtons, 0, sizeof(mObjectButtons));",
+              "SimFishScreen: only a quarter of the fish button array was cleared")
+
+    # --- 7. The applause song is a local, kept after it dies ----------------
+    #
+    # Symptom: a few seconds after a fish finishes singing the game segfaults,
+    # with no backtrace, because the crash handler itself falls over following
+    # the same wreckage.
+    #
+    # Cause: when a song ends the manager queues a short applause song, and
+    # builds it on the stack:
+    #
+    #     FishSong aSong;
+    #     ...
+    #     AddSong(&aSong);
+    #
+    # AddSong stores the pointer in mSongList, which outlives Update(). The
+    # next tick calls Update() through that address, by then holding whatever
+    # the stack has been used for since.
+    #
+    # Every other song in the list comes from PlayFishSong, which allocates,
+    # so this one does the same. The list does not delete what it drops, here
+    # or anywhere else; that leak is left alone rather than changed blind.
+    #
+    # It has never run before: the songs themselves could not load until the
+    # path they were opened with was corrected, so nothing ever finished
+    # playing and nothing ever applauded.
+    ok &= sub("FishSongMgr.cpp",
+              b"        FishSong aSong;",
+              b"        FishSong *aSong = new FishSong();",
+              "FishSongMgr: applause song was built on the stack")
+
+    ok &= sub("FishSongMgr.cpp",
+              b"        aSong.mNoteDataVector.push_back(aNote);\n"
+              b"\n"
+              b"        aNote = NoteData();",
+              b"        aSong->mNoteDataVector.push_back(aNote);\n"
+              b"\n"
+              b"        aNote = NoteData();",
+              "FishSongMgr: applause first note")
+
+    ok &= sub("FishSongMgr.cpp",
+              b"        aSong.mNoteDataVector.push_back(aNote);\n"
+              b"        AddSong(&aSong);",
+              b"        aSong->mNoteDataVector.push_back(aNote);\n"
+              b"        AddSong(aSong);",
+              "FishSongMgr: applause second note and hand-off")
+
+    # --- 8. StopFishSong walks an iterator it just invalidated --------------
+    #
+    # erase() returns the next position for a reason. Using the old one after
+    # is undefined, and the loop then compares it against end(). Update() in
+    # the same file gets this right, so it reads as an oversight rather than
+    # intent.
+    ok &= sub("FishSongMgr.cpp",
+              b"        if (aCurSong->mSongId == theSongId)\n"
+              b"            mSongList.erase(it);",
+              b"        if (aCurSong->mSongId == theSongId)\n"
+              b"            it = mSongList.erase(it);",
+              "FishSongMgr::StopFishSong: iterator used after erase")
+
+    # --- 9. Fish::GetShellPrice calls itself --------------------------------
+    #
+    # Symptom: the virtual tank crashes a few seconds after opening add/remove
+    # fish, with no output at all -- the handler needs a stack to run on and
+    # there is none left.
+    #
+    # Cause: the override was meant to take the base price and scale it by
+    # size, and asks itself for it instead:
+    #
+    #     int aVal = GetShellPrice();
+    #
+    # so it recurses until the stack is gone. BallFish, Breeder and
+    # SylvesterFish all override the same method the same way and all three
+    # write GameObject::GetShellPrice(), which is what this line was; the
+    # qualifier did not survive decompilation.
+    #
+    # The sim screen asks every fish for its price to draw the sell value, so
+    # opening that screen is what reaches it.
+    ok &= sub("Fish.cpp",
+              b"    int aVal = GetShellPrice();",
+              b"    int aVal = GameObject::GetShellPrice();",
+              "Fish::GetShellPrice: recursed into itself instead of the base")
+
     return 0 if ok else 1
 
 
