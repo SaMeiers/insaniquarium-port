@@ -147,12 +147,6 @@ if [ "$WITH_PR" = "1" ]; then
   for f in port.json gameinfo.xml README.md screenshot.png screenshot.jpg; do
     [ -f "$PR/$PORTDIR/$f" ] && mv "$PR/$PORTDIR/$f" "$PR/"
   done
-  # git records the execute bit, and a port whose binary lost it does not
-  # start. cp does not always carry it across, and on a Windows filesystem the
-  # bit is emulated and easily dropped, so set it here and say how to force it
-  # into the index if git still records 644.
-  chmod +x "$PR/Insaniquarium Deluxe.sh" "$PR/$PORTDIR/Insaniquarium"            "$PR/$PORTDIR/libs.aarch64/libSDL3.so.0"
-
   echo
   echo "== ports/$PORTDIR (copy this into the fork)"
   (cd "$ROOT/port/pr" && find . -type f | sort)
@@ -162,15 +156,7 @@ if [ "$WITH_PR" = "1" ]; then
 ' 2>/dev/null
   du -sh "$ROOT/port/pr"
   echo
-  echo "  The execute bit does not survive a Windows checkout: git there runs"
-  echo "  with core.fileMode=false and records every file as 100644, so the"
-  echo "  launch script and the binary would reach the PR unable to run. After"
-  echo "  copying into the fork, force the three:"
-  echo
-  echo "    git update-index --chmod=+x \"ports/$PORTDIR/Insaniquarium Deluxe.sh\""
-  echo "    git update-index --chmod=+x ports/$PORTDIR/$PORTDIR/Insaniquarium"
-  echo "    git update-index --chmod=+x ports/$PORTDIR/$PORTDIR/libs.aarch64/libSDL3.so.0"
-  echo
-  echo "  and check nothing else is left:"
-  echo "    git ls-files -s ports/$PORTDIR"
+  echo "  Commit these 644. PortMaster-New's AGENTS.md asks for it, and the"
+  echo "  launch script chmods the binary itself because zip extraction drops"
+  echo "  the bit however it was committed."
 fi

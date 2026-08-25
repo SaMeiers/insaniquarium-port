@@ -47,6 +47,8 @@ if [ -n "$SDL_AUDIODRIVER" ]; then
   GAME_SDL_AUDIODRIVER=sdl2
 fi
 
+$ESUDO chmod +x "$GAMEDIR/$BINARY"
+
 mkdir -p "$GAMEDIR/conf"
 export XDG_CONFIG_HOME="$GAMEDIR/conf"
 
