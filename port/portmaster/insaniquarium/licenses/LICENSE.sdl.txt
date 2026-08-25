@@ -1,5 +1,13 @@
+The bundled libSDL3.so.0 is built from bmdhacks/SDL's `sdl2-backend` fork
+(https://github.com/bmdhacks/SDL/tree/sdl2-backend), not upstream libsdl-org/SDL
+directly -- it delegates video/audio/joystick to the target device's own
+already-installed SDL2 via dlopen, which is why this port needs no bundled
+SDL2. On top of that fork it carries one local patch, described in the
+README, without which relative pointer motion loses its sign. Same zlib
+license as upstream SDL, reproduced below.
+
 Copyright (C) 1997-2025 Sam Lantinga <slouken@libsdl.org>
-  
+
 This software is provided 'as-is', without any express or implied
 warranty.  In no event will the authors be held liable for any damages
 arising from the use of this software.
