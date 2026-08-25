@@ -19,9 +19,10 @@
 #   screenshot.jpg
 #   insaniquarium/          <- launcher-side files, licenses, and the binary
 #
-# The official builder (tools/build_release.py) moves the metadata INTO the port
-# directory when it makes the zip. This script does the same, so what is tested
-# here is laid out like what the repository produces.
+# The zip this makes puts the metadata inside the port directory, matching the
+# packages handed round for testing rather than whatever tools/build_release.py
+# emits -- that one builds from the repository and is the authority for the
+# pull request, which is what --pr is for.
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
