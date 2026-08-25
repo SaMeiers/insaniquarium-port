@@ -15,18 +15,19 @@
 #   README.md
 #   gameinfo.xml
 #   port.json
-#   screenshot.png
+#   screenshot.jpg
 #   insaniquarium/          <- launcher-side files, licenses, and the binary
 #
 # The official builder (tools/build_release.py) moves the metadata INTO the port
-# directory when it makes the zip, and renames README.md after the port. This
-# script does the same, so what is tested here is what the repository produces.
+# directory when it makes the zip. This script does the same, so what is tested
+# here is laid out like what the repository produces.
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 BIN="$ROOT/port/bin-linux-aarch64-Insaniquarium"
 PM="$ROOT/port/portmaster"
 DIST="$ROOT/port/dist"
+SHIM="${WINFISH_SDL3_SHIM:-$ROOT/port/bin-linux-aarch64-libSDL3.so.0}"
 PORTDIR="insaniquarium"
 GAME="$DIST/$PORTDIR"
 
@@ -60,20 +61,30 @@ cp "$BIN" "$GAME/Insaniquarium"
 chmod +x "$GAME/Insaniquarium"
 
 cp -r "$PM/$PORTDIR/." "$GAME/"
+
+mkdir -p "$GAME/libs.aarch64"
+if [ -f "$SHIM" ]; then
+  cp "$SHIM" "$GAME/libs.aarch64/libSDL3.so.0"
+  chmod +x "$GAME/libs.aarch64/libSDL3.so.0"
+else
+  echo "missing the SDL3 shim: $SHIM"
+  echo "  build it with port/build-sdl3-shim.sh"
+  exit 1
+fi
 cp "$PM/Insaniquarium Deluxe.sh" "$DIST/"
 
 # The same moves build_release.py makes.
 cp "$PM/port.json"     "$GAME/port.json"
 cp "$PM/gameinfo.xml"  "$GAME/gameinfo.xml"
-cp "$PM/README.md"     "$GAME/$PORTDIR.md"
-for s in "$PM"/screenshot.png "$PM"/screenshot.jpg "$PM"/cover.png "$PM"/cover.jpg; do
+cp "$PM/README.md"     "$GAME/README.md"
+for s in "$PM"/screenshot.png "$PM"/screenshot.jpg; do
   [ -f "$s" ] && cp "$s" "$GAME/"
 done
 
 # CRLF: the device shell does not forgive it ("bad interpreter: /bin/bash^M").
-# A .gptk with CRLF fails worse -- gptokeyb reads "mouse_left\r" as a key name
+# The gamepad config fails worse -- gptokeyb reads "mouse_left\r" as a key name
 # that does not exist, ignores it silently, and the A button does nothing.
-for f in "$DIST/Insaniquarium Deluxe.sh" "$GAME/insaniquarium.gptk"; do
+for f in "$DIST/Insaniquarium Deluxe.sh" "$GAME/insaniquarium.ini"; do
   sed -i 's/\r$//' "$f"
 done
 chmod +x "$DIST/Insaniquarium Deluxe.sh"

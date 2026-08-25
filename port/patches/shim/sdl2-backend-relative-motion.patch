@@ -1,0 +1,36 @@
+Pass the relative fields when reporting relative motion
+
+The SDL2 backend decides an event is relative and then hands
+SDL_SendMouseMotion the absolute coordinates anyway, so every motion moves
+the pointer by its own position on screen instead of by how far it moved.
+
+The effect is a pointer that only ever travels right and down, in jumps of
+hundreds of pixels, until it reaches the bottom-right corner and stays
+there. Measured on an ArkOS R36S driven by gptokeyb2: 394 events carrying a
+negative component, and not one negative relative value reaching the
+application.
+
+Which devices hit it depends on `e.motion.which`, the SDL2 mouse instance
+id, being non-zero -- gptokeyb2's virtual pointer is, a plain one often is
+not -- so the same build behaves correctly on one handheld and not on the
+next.
+
+--- a/src/video/sdl2/SDL_sdl2events.c
++++ b/src/video/sdl2/SDL_sdl2events.c
+@@ -113,10 +113,15 @@
+         case SDL2_MOUSEMOTION: {
+             SDL_Window *win = FindWindowBySDL2ID(e.motion.windowID);
+             if (win) {
+                 bool relative = (e.motion.which != 0); /* rough check */
+                 SDL_SendMouseMotion(timestamp, win, SDL_GLOBAL_MOUSE_ID,
+                                     relative,
+-                                    (float)e.motion.x, (float)e.motion.y);
++                                    /* Relative motion is xrel/yrel; x/y is
++                                       where the pointer now is, which as a
++                                       delta is both far too large and never
++                                       negative. */
++                                    relative ? (float)e.motion.xrel : (float)e.motion.x,
++                                    relative ? (float)e.motion.yrel : (float)e.motion.y);
+             }
+             break;
+         }

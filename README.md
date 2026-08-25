@@ -54,8 +54,10 @@ The fixups are split by intent:
 | `apply-portability.py` | removing Windows-only code for Android and Linux |
 | `apply-gamefixes.py` | bugs in the game itself, not in the port |
 
-`port/patches/` holds changes to third-party code that lives inside PopLib's own
-submodules, applied by the build script rather than vendored.
+`port/patches/` holds changes to third-party code that is built from its own
+checkout rather than vendored here, applied by the build script that uses it:
+`port/patches/` itself for the SDL inside PopLib's submodules, and
+`port/patches/shim/` for the SDL3 shim the PortMaster package ships.
 
 ## Building
 
@@ -83,8 +85,16 @@ sysroot; the header of `port/toolchain-aarch64-linux.cmake` explains why:
 
 ```bash
 bash port/build-linux-arm64.sh
+bash port/build-sdl3-shim.sh        # the libSDL3.so.0 the package ships
 bash port/package-portmaster.sh     # -> port/insaniquarium.zip
 ```
+
+The package links SDL3 dynamically against a shim that forwards to whatever
+SDL2 the firmware already has, which is how PortMaster expects a port to reach
+the screen: each firmware has already patched its own SDL2 for its own
+hardware. `port/build-sdl3-shim.sh` builds it against the same sysroot as the
+game, so it needs the same glibc the game does rather than the newer one the
+prebuilt copy wants.
 
 ## Controls on a handheld
 
@@ -97,6 +107,7 @@ through gptokeyb.
 | A | left click |
 | B | right click |
 | L1 / R1 | slow the pointer for small targets |
+| Y | collect every coin at once, if Auto Collect is on in Options |
 | Start / Select | Enter / Escape |
 
 ## Known issues

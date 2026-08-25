@@ -97,17 +97,20 @@ cmake -S "$SRC/port" -B "$BUILD" -G Ninja \
   `# Music goes through libopenmpt. Without turning BASS off the binary still` \
   `# links libbass.so even though nothing uses it.` \
   -DPOPLIB_WITH_BASS=OFF \
-  `# Handhelds on older Allwinner BSP kernels have no DRM at all: no` \
-  `# /dev/dri, no /sys/class/drm, only /dev/fb0 and the Mali blob.` \
-  `# KMSDRM cannot reach them, so build the framebuffer driver too and` \
-  `# let SDL pick whichever one the device can actually use.` \
-  -DSDL_MALI=ON \
-  `# Rocknix runs a Wayland compositor and asks for it by name, and it also` \
-  `# holds DRM, so KMSDRM cannot take over. Without this the port has no way` \
-  `# in at all. SDL loads libwayland at run time, so devices without it are` \
-  `# unaffected and the binary gains no new dependency.` \
-  -DSDL_WAYLAND=ON \
+  `# PortMaster ships an SDL3 that forwards to whatever SDL2 the firmware` \
+  `# already has, so linking SDL3 dynamically hands the display and input` \
+  `# problem to the people who solved it per device. package-portmaster.sh` \
+  `# puts that shim in libs.aarch64 in place of the SDL3 built here, which` \
+  `# is why none of SDL's own video backends are worth turning on here:` \
+  `# they are linked against and then never loaded.` \
+  -DPOPLIB_SDL_SHARED=ON \
   "$@"
+
+# Remove the previous one before building rather than overwriting it at the
+# end. Anything that goes wrong in between then leaves no binary at all, which
+# packaging refuses; leaving the old one in place looks exactly like success
+# and ships the previous build.
+rm -f "$WINSRC/port/bin-linux-aarch64-Insaniquarium"
 
 cmake --build "$BUILD" --parallel
 
