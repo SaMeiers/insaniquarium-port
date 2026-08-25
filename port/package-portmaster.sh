@@ -3,6 +3,7 @@
 #
 #   bash port/package-portmaster.sh            # the port alone (no assets)
 #   bash port/package-portmaster.sh --assets   # plus assets, for local testing
+#   bash port/package-portmaster.sh --pr       # the layout PortMaster-New wants
 #
 # The published zip carries no assets: they belong to PopCap and each user
 # supplies their own copy. --assets is only for filling a card to test on the
@@ -37,7 +38,11 @@ GAME="$DIST/$PORTDIR"
 ASSETS_SRC="$ROOT/port/bin"
 
 WITH_ASSETS=0
-[ "${1:-}" = "--assets" ] && WITH_ASSETS=1
+WITH_PR=0
+case "${1:-}" in
+  --assets) WITH_ASSETS=1 ;;
+  --pr)     WITH_PR=1 ;;
+esac
 
 [ -f "$BIN" ] || { echo "missing binary: $BIN  (run build-linux-arm64.sh in WSL)"; exit 1; }
 
@@ -129,3 +134,43 @@ else
   exit 1
 fi
 echo "zip: $ZIP ($(du -h "$ZIP" | cut -f1))"
+
+# A PR to PortMaster-New is not the zip: the metadata sits beside the port
+# directory rather than inside it, and the binaries are committed as files.
+# Built from the same DIST the zip came from so the two cannot disagree.
+if [ "$WITH_PR" = "1" ]; then
+  PR="$ROOT/port/pr/ports/$PORTDIR"
+  rm -rf "$ROOT/port/pr"
+  mkdir -p "$PR/$PORTDIR"
+  cp -r "$GAME/." "$PR/$PORTDIR/"
+  cp "$DIST/Insaniquarium Deluxe.sh" "$PR/"
+  for f in port.json gameinfo.xml README.md screenshot.png screenshot.jpg; do
+    [ -f "$PR/$PORTDIR/$f" ] && mv "$PR/$PORTDIR/$f" "$PR/"
+  done
+  # git records the execute bit, and a port whose binary lost it does not
+  # start. cp does not always carry it across, and on a Windows filesystem the
+  # bit is emulated and easily dropped, so set it here and say how to force it
+  # into the index if git still records 644.
+  chmod +x "$PR/Insaniquarium Deluxe.sh" "$PR/$PORTDIR/Insaniquarium"            "$PR/$PORTDIR/libs.aarch64/libSDL3.so.0"
+
+  echo
+  echo "== ports/$PORTDIR (copy this into the fork)"
+  (cd "$ROOT/port/pr" && find . -type f | sort)
+  echo
+  echo "  90MB is the limit before tools/build_data.py has to split a file:"
+  find "$PR" -type f -size +85M -printf '  *** %s bytes: %p
+' 2>/dev/null
+  du -sh "$ROOT/port/pr"
+  echo
+  echo "  The execute bit does not survive a Windows checkout: git there runs"
+  echo "  with core.fileMode=false and records every file as 100644, so the"
+  echo "  launch script and the binary would reach the PR unable to run. After"
+  echo "  copying into the fork, force the three:"
+  echo
+  echo "    git update-index --chmod=+x \"ports/$PORTDIR/Insaniquarium Deluxe.sh\""
+  echo "    git update-index --chmod=+x ports/$PORTDIR/$PORTDIR/Insaniquarium"
+  echo "    git update-index --chmod=+x ports/$PORTDIR/$PORTDIR/libs.aarch64/libSDL3.so.0"
+  echo
+  echo "  and check nothing else is left:"
+  echo "    git ls-files -s ports/$PORTDIR"
+fi
