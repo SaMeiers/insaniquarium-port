@@ -165,7 +165,14 @@ if [ "$aStatus" -ne 0 ]; then
     # Given no driver name, SDL reports only that every driver failed, which
     # hides why each one did. Naming one makes it report that driver's own
     # error. Stop at the first that works: if one does, that is the answer.
-    for aDriver in kmsdrm mali; do
+    # mali is for machines with no DRM at all. Naming it on one that has DRM
+    # hands a framebuffer window to a blob built for GBM, and it walks off the
+    # end of it inside eglCreateWindowSurface -- a segfault in vendor code,
+    # which is a far worse answer than the error we were trying to obtain.
+    aDrivers="kmsdrm"
+    [ -d /dev/dri ] || aDrivers="kmsdrm mali"
+
+    for aDriver in $aDrivers; do
       echo "--- retrying with $aDriver named ---"
       SDL_VIDEODRIVER=$aDriver ./"$BINARY"
       aRetry=$?

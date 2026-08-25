@@ -102,6 +102,11 @@ cmake -S "$SRC/port" -B "$BUILD" -G Ninja \
   `# KMSDRM cannot reach them, so build the framebuffer driver too and` \
   `# let SDL pick whichever one the device can actually use.` \
   -DSDL_MALI=ON \
+  `# Rocknix runs a Wayland compositor and asks for it by name, and it also` \
+  `# holds DRM, so KMSDRM cannot take over. Without this the port has no way` \
+  `# in at all. SDL loads libwayland at run time, so devices without it are` \
+  `# unaffected and the binary gains no new dependency.` \
+  -DSDL_WAYLAND=ON \
   "$@"
 
 cmake --build "$BUILD" --parallel
