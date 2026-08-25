@@ -279,6 +279,43 @@ def main():
               b"    int aVal = GameObject::GetShellPrice();",
               "Fish::GetShellPrice: recursed into itself instead of the base")
 
+    # --- 10. The loading thread carries on after it fails -------------------
+    #
+    # Symptom: on one tester's device the splash screen appears and the game
+    # dies immediately, segfaulting inside WinFishApp::LoadingThreadProc on a
+    # thread of its own.
+    #
+    # Cause: when a resource group fails to load the thread records it --
+    #
+    #     WFAShowResourceError(false);
+    #     mLoadingFailed = true;
+    #
+    # -- and then keeps going into work that assumes everything loaded:
+    # IMAGE_VERTCREASE->mWidth, IMAGE_HORZCREASE->mHeight, and a run of
+    # GetImageById results used without checking. Any of them is null when the
+    # group did not load, and the first one reached ends the process.
+    #
+    # Start() already refuses to run the game when mLoadingFailed is set, so
+    # stopping here is what the flag was for. It also means the player sees the
+    # resource error, which names the file that is missing, instead of nothing
+    # at all.
+    #
+    # The error also goes to the log. It is shown in a dialog, which is no
+    # use in a report from someone else's machine, and knowing which group
+    # failed is the whole question.
+    ok &= sub("WinFishApp.cpp",
+              b"\t\t\tWFAShowResourceError(false);\r\n"
+              b"\t\t\tmLoadingFailed = true;\r\n"
+              b"\t\t}",
+              b"\t\t\tprintf(\"resource load failed for %s: %s\\n\", aResNames[i].c_str(),\r\n"
+              b"\t\t\t\t   mResourceManager->GetErrorText().c_str());\r\n"
+              b"\t\t\tfflush(stdout);\r\n"
+              b"\t\t\tWFAShowResourceError(false);\r\n"
+              b"\t\t\tmLoadingFailed = true;\r\n"
+              b"\t\t\treturn;\r\n"
+              b"\t\t}",
+              "WinFishApp: loading thread ran on after a resource failure")
+
     return 0 if ok else 1
 
 
