@@ -316,8 +316,50 @@ def main():
               b"\t\t}",
               "WinFishApp: loading thread ran on after a resource failure")
 
+    # --- 11. Fish starvation death plays no sound ---------------------------
+    #
+    # Symptom: when a guppy (or other fish inheriting Fish::Hungry) dies of
+    # starvation, no death sound is played, even though all other fish types
+    # (Breeder, Oscar, Grubber, Penta, Gekko, Ultra) and other death causes
+    # play SOUND_DIE.
+    #
+    # Cause: Fish::Hungry calls `Die()` without arguments. Fish.h declared
+    # `virtual void Die(bool flag = false);`, which defaults to false. Inside
+    # Fish::Die, `if (flag) PlayDieSound(mType);` is only executed when flag
+    # is true.
+    #
+    # The fix is to pass `Die(true)` in Fish::Hungry and change the default in
+    # Fish.h to `flag = true`.
+    ok &= sub("Fish.h",
+              b"\t\tvirtual void\t\t\tDie(bool flag = false);\t\t\t\t\t\t\t//[88]",
+              b"\t\tvirtual void\t\t\tDie(bool flag = true);\t\t\t\t\t\t\t//[88]",
+              "Fish.h: default Die() argument changed to true so death sound plays")
+
+    ok &= sub("Fish.cpp",
+              b"        if (mHunger < -499 && mBeginner)\n"
+              b"        {\n"
+              b"            Die();\n"
+              b"            return false;\n"
+              b"        }",
+              b"        if (mHunger < -499 && mBeginner)\n"
+              b"        {\n"
+              b"            Die(true);\n"
+              b"            return false;\n"
+              b"        }",
+              "Fish.cpp: play death sound on beginner starvation death")
+
+    ok &= sub("Fish.cpp",
+              b"    else\n"
+              b"        Die();\n"
+              b"    return false;",
+              b"    else\n"
+              b"        Die(true);\n"
+              b"    return false;",
+              "Fish.cpp: play death sound on normal starvation death")
+
     return 0 if ok else 1
 
 
 if __name__ == "__main__":
     sys.exit(main())
+
